@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 
 namespace backend.Models
 {
-    public class QRScan
+    public class WQRCode
     {
-        public string Id { get; set; } = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
-    public string StoryId { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
+     public Guid WeddingId { get; set; }
     public string Url { get; set; }
+    public string AssetUrl { get; set; }
+    public WeddingStory Wedding { get; set; }
     public int Scans { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

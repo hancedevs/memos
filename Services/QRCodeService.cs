@@ -5,12 +5,16 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading.Tasks;
+using backend.Models;
 using QRCoder;
 
 namespace backend.Services
 {
     public class QRCodeService: AbstractQRCode, IDisposable
     {
+         
+
+    
         public QRCodeService()
         {
         }
@@ -19,7 +23,6 @@ namespace backend.Services
             : base(data)
         {
         }
-
         public Bitmap GetGraphic(int pixelsPerModule)
         {
             return GetGraphic(pixelsPerModule, Color.Black, Color.White, drawQuietZones: true);

@@ -7,7 +7,10 @@ namespace backend.Models
 {
     public class Media
 {
-    public string Type { get; set; } // "image" or "video"
+    public Guid Id { get; set; }
+    public Guid WeddingId { get; set; }
     public string Url { get; set; }
+    public string Type { get; set; } // "image" or "video"
+    public WeddingStory Wedding { get; set; }
 }
 }
