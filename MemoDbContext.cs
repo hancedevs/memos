@@ -23,10 +23,7 @@ namespace backend
         modelBuilder.Entity<Media>().HasKey(m => m.Id);
         modelBuilder.Entity<WQRCode>().HasKey(q => q.Id);
 
-        modelBuilder.Entity<WeddingStory>()
-            .HasOne(w => w.Planner)
-            .WithMany(p => p.Weddings)
-            .HasForeignKey(w => w.PlannerId);
+      
 
         modelBuilder.Entity<Media>()
             .HasOne(m => m.Wedding)

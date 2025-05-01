@@ -26,7 +26,7 @@ namespace backend.Endpoints
             }
             var fileUrl = $"/media/{fileName}";
             return Results.Ok(new { Url = fileUrl });
-        });
+        }).DisableAntiforgery();
     }
 }
 public class IgnoreAntiforgeryTokenFilter : IEndpointFilter
