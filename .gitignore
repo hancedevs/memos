@@ -1,0 +1,47 @@
+# Build Folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# Visual Studio working files
+.vs/
+
+# Package directories
+packages/
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Publish output
+*.publish/
+
+# Database files
+*.mdf
+*.ldf
+
+# Configuration files
+appsettings.*.json
+secrets.json
+
+# Resharper files
+_ReSharper*/
+*.DotSettings.user
+
+# Rider files
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
