@@ -10,4 +10,11 @@ namespace backend.Dto
         public Guid WeddingId { get; set; }
         public IFormFile File { get; set; }
     }
+    public class MediaFileResponseDto
+    {
+        public Guid Id { get; set; }
+        public string Url { get; set; }
+        public string Type { get; set; } // "image" or "video"
+        public bool IsCoverImage { get; set; } = false;
+    }
 }

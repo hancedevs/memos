@@ -13,6 +13,7 @@ namespace backend
     public DbSet<WeddingStory> Weddings { get; set; }
     public DbSet<Media> Media { get; set; }
     public DbSet<WQRCode> QRCodes { get; set; }
+    public DbSet<GuestMessage> GuestMessages { get; set; }
 
     public MemoDbContext(DbContextOptions<MemoDbContext> options) : base(options) { }
 
@@ -22,6 +23,7 @@ namespace backend
         modelBuilder.Entity<WeddingStory>().HasKey(w => w.Id);
         modelBuilder.Entity<Media>().HasKey(m => m.Id);
         modelBuilder.Entity<WQRCode>().HasKey(q => q.Id);
+        modelBuilder.Entity<GuestMessage>().HasKey(q => q.Id);
 
       
 
@@ -34,6 +36,11 @@ namespace backend
             .HasOne(q => q.Wedding)
             .WithOne(w => w.QRCode)
             .HasForeignKey<WQRCode>(q => q.WeddingId);
-    }
+        modelBuilder.Entity<GuestMessage>()
+            .HasOne(q => q.Wedding)
+            .WithMany(w => w.GuestMessages)
+            .HasForeignKey(q => q.WeddingId);
+            
+        }
 }
 }

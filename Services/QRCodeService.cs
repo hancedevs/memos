@@ -1,20 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Threading.Tasks;
-using backend.Models;
+using Google.Protobuf.WellKnownTypes;
 using QRCoder;
+using SkiaSharp;
+using System;
+using System.Drawing;
 
 namespace backend.Services
 {
-    public class QRCodeService: AbstractQRCode, IDisposable
+    public class QRCodeService : AbstractQRCode, IDisposable
     {
-         
-
-    
         public QRCodeService()
         {
         }
@@ -23,99 +16,158 @@ namespace backend.Services
             : base(data)
         {
         }
-        public Bitmap GetGraphic(int pixelsPerModule)
+
+        public SKBitmap GetGraphic(int pixelsPerModule)
         {
-            return GetGraphic(pixelsPerModule, Color.Black, Color.White, drawQuietZones: true);
+            return GetGraphic(pixelsPerModule, SKColors.Black, SKColors.White, drawQuietZones: true);
         }
 
-        public Bitmap GetGraphic(int pixelsPerModule, string darkColorHtmlHex, string lightColorHtmlHex, bool drawQuietZones = true)
+        public SKBitmap GetGraphic(int pixelsPerModule, string darkColorHtmlHex, string lightColorHtmlHex, bool drawQuietZones = true)
         {
-            return GetGraphic(pixelsPerModule, ColorTranslator.FromHtml(darkColorHtmlHex), ColorTranslator.FromHtml(lightColorHtmlHex), drawQuietZones);
+            // Parse HTML hex colors to SkiaSharp SKColor
+            SKColor darkColor = SKColor.Parse(darkColorHtmlHex);
+            SKColor lightColor = SKColor.Parse(lightColorHtmlHex);
+            return GetGraphic(pixelsPerModule, darkColor, lightColor, drawQuietZones);
         }
 
-        public Bitmap GetGraphic(int pixelsPerModule, Color darkColor, Color lightColor, bool drawQuietZones = true)
+        public SKBitmap GetGraphic(int pixelsPerModule, SKColor darkColor, SKColor lightColor, bool drawQuietZones = true)
         {
-            int num = (base.QrCodeData.ModuleMatrix.Count - ((!drawQuietZones) ? 8 : 0)) * pixelsPerModule;
-            int num2 = ((!drawQuietZones) ? (4 * pixelsPerModule) : 0);
-            Bitmap bitmap = new Bitmap(num, num);
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            using SolidBrush brush2 = new SolidBrush(lightColor);
-            using SolidBrush brush = new SolidBrush(darkColor);
-            for (int i = 0; i < num + num2; i += pixelsPerModule)
+            int matrixSize = base.QrCodeData.ModuleMatrix.Count - (drawQuietZones ? 0 : 8);
+            int size = matrixSize * pixelsPerModule;
+            int offset = drawQuietZones ? 0 : 4 * pixelsPerModule;
+
+            // Create a new SkiaSharp bitmap
+            var bitmap = new SKBitmap(size, size);
+            using var canvas = new SKCanvas(bitmap);
+
+            // Fill the background with light color
+            canvas.Clear(lightColor);
+
+            // Create paints for dark and light colors
+            using var darkPaint = new SKPaint { Color = darkColor, Style = SKPaintStyle.Fill };
+            using var lightPaint = new SKPaint { Color = lightColor, Style = SKPaintStyle.Fill };
+
+            // Draw QR code modules
+            for (int i = 0; i < size + offset; i += pixelsPerModule)
             {
-                for (int j = 0; j < num + num2; j += pixelsPerModule)
+                for (int j = 0; j < size + offset; j += pixelsPerModule)
                 {
-                    if (base.QrCodeData.ModuleMatrix[(j + pixelsPerModule) / pixelsPerModule - 1][(i + pixelsPerModule) / pixelsPerModule - 1])
-                    {
-                        graphics.FillRectangle(brush, new Rectangle(i - num2, j - num2, pixelsPerModule, pixelsPerModule));
-                    }
-                    else
-                    {
-                        graphics.FillRectangle(brush2, new Rectangle(i - num2, j - num2, pixelsPerModule, pixelsPerModule));
-                    }
+                    bool isDark = base.QrCodeData.ModuleMatrix[(j + pixelsPerModule) / pixelsPerModule - 1][(i + pixelsPerModule) / pixelsPerModule - 1];
+                    var paint = isDark ? darkPaint : lightPaint;
+                    canvas.DrawRect(i - offset, j - offset, pixelsPerModule, pixelsPerModule, paint);
                 }
             }
-
-            graphics.Save();
             return bitmap;
         }
 
-        public Bitmap GetGraphic(int pixelsPerModule, Color darkColor, Color lightColor, Bitmap icon = null, int iconSizePercent = 15, int iconBorderWidth = 0, bool drawQuietZones = true, Color? iconBackgroundColor = null)
+        public SKBitmap GetGraphic(int pixelsPerModule, SKColor darkColor, SKColor lightColor, SKBitmap icon = null, int iconSizePercent = 15, int iconBorderWidth = 0, bool drawQuietZones = true, SKColor? iconBackgroundColor = null)
         {
-            int num = (base.QrCodeData.ModuleMatrix.Count - ((!drawQuietZones) ? 8 : 0)) * pixelsPerModule;
-            int num2 = ((!drawQuietZones) ? (4 * pixelsPerModule) : 0);
-            Bitmap bitmap = new Bitmap(num, num, PixelFormat.Format32bppArgb);
-            using Graphics graphics = Graphics.FromImage(bitmap);
-            using SolidBrush solidBrush2 = new SolidBrush(lightColor);
-            using SolidBrush solidBrush = new SolidBrush(darkColor);
-            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            graphics.CompositingQuality = CompositingQuality.HighQuality;
-            graphics.Clear(lightColor);
-            bool flag = icon != null && iconSizePercent > 0 && iconSizePercent <= 100;
-            for (int i = 0; i < num + num2; i += pixelsPerModule)
+            int matrixSize = base.QrCodeData.ModuleMatrix.Count - (drawQuietZones ? 0 : 8);
+            int size = matrixSize * pixelsPerModule;
+            int offset = drawQuietZones ? 0 : 4 * pixelsPerModule;
+
+            // Create a new SkiaSharp bitmap
+            var bitmap = new SKBitmap(size, size);
+            using var canvas = new SKCanvas(bitmap);
+
+            // Fill the background with light color
+            canvas.Clear(lightColor);
+
+            // Create paints for dark and light colors
+            using var darkPaint = new SKPaint { Color = darkColor, Style = SKPaintStyle.Fill };
+            using var lightPaint = new SKPaint { Color = lightColor, Style = SKPaintStyle.Fill };
+
+            // Draw QR code modules
+            for (int i = 0; i < size + offset; i += pixelsPerModule)
             {
-                for (int j = 0; j < num + num2; j += pixelsPerModule)
+                for (int j = 0; j < size + offset; j += pixelsPerModule)
                 {
-                    SolidBrush brush = (base.QrCodeData.ModuleMatrix[(j + pixelsPerModule) / pixelsPerModule - 1][(i + pixelsPerModule) / pixelsPerModule - 1] ? solidBrush : solidBrush2);
-                    graphics.FillRectangle(brush, new Rectangle(i - num2, j - num2, pixelsPerModule, pixelsPerModule));
+                    bool isDark = base.QrCodeData.ModuleMatrix[(j + pixelsPerModule) / pixelsPerModule - 1][(i + pixelsPerModule) / pixelsPerModule - 1];
+                    var paint = isDark ? darkPaint : lightPaint;
+                    canvas.DrawRect(i - offset, j - offset, pixelsPerModule, pixelsPerModule, paint);
                 }
             }
 
-            if (flag)
+            // Draw icon if provided
+            bool hasIcon = icon != null && iconSizePercent > 0 && iconSizePercent <= 100;
+            if (hasIcon)
             {
-                float num3 = (float)(iconSizePercent * bitmap.Width) / 100f;
-                float num4 = (flag ? (num3 * (float)icon.Height / (float)icon.Width) : 0f);
-                float num5 = ((float)bitmap.Width - num3) / 2f;
-                float num6 = ((float)bitmap.Height - num4) / 2f;
-                RectangleF rect = new RectangleF(num5 - (float)iconBorderWidth, num6 - (float)iconBorderWidth, num3 + (float)(iconBorderWidth * 2), num4 + (float)(iconBorderWidth * 2));
-                RectangleF destRect = new RectangleF(num5, num6, num3, num4);
-                SolidBrush brush2 = (iconBackgroundColor.HasValue ? new SolidBrush(iconBackgroundColor.Value) : solidBrush2);
+                float iconWidth = (iconSizePercent * size) / 100f;
+                float iconHeight = iconWidth * icon.Height / icon.Width;
+                float x = (size - iconWidth) / 2f;
+                float y = (size - iconHeight) / 2f;
+
+                // Draw icon background with border (if specified)
                 if (iconBorderWidth > 0)
                 {
-                    using GraphicsPath path = CreateRoundedRectanglePath(rect, iconBorderWidth * 2);
-                    graphics.FillPath(brush2, path);
+                    var backgroundColor = iconBackgroundColor ?? lightColor;
+                    using var borderPaint = new SKPaint { Color = backgroundColor, Style = SKPaintStyle.Fill };
+                    var borderRect = new SKRect(x - iconBorderWidth, y - iconBorderWidth, x + iconWidth + iconBorderWidth, y + iconHeight + iconBorderWidth);
+                    using var path = CreateRoundedRectanglePath(borderRect, iconBorderWidth * 2);
+                    canvas.DrawPath(path, borderPaint);
                 }
 
-                graphics.DrawImage(icon, destRect, new RectangleF(0f, 0f, icon.Width, icon.Height), GraphicsUnit.Pixel);
+                // Resize and draw the icon
+                using var resizedIcon = ResizeBitmap(icon, (int)iconWidth, (int)iconHeight);
+                canvas.DrawBitmap(resizedIcon, x, y);
             }
-
-            graphics.Save();
             return bitmap;
         }
 
-        internal GraphicsPath CreateRoundedRectanglePath(RectangleF rect, int cornerRadius)
+        internal SKPath CreateRoundedRectanglePath(SKRect rect, int cornerRadius)
         {
-            GraphicsPath graphicsPath = new GraphicsPath();
-            graphicsPath.AddArc(rect.X, rect.Y, cornerRadius * 2, cornerRadius * 2, 180f, 90f);
-            graphicsPath.AddLine(rect.X + (float)cornerRadius, rect.Y, rect.Right - (float)(cornerRadius * 2), rect.Y);
-            graphicsPath.AddArc(rect.X + rect.Width - (float)(cornerRadius * 2), rect.Y, cornerRadius * 2, cornerRadius * 2, 270f, 90f);
-            graphicsPath.AddLine(rect.Right, rect.Y + (float)(cornerRadius * 2), rect.Right, rect.Y + rect.Height - (float)(cornerRadius * 2));
-            graphicsPath.AddArc(rect.X + rect.Width - (float)(cornerRadius * 2), rect.Y + rect.Height - (float)(cornerRadius * 2), cornerRadius * 2, cornerRadius * 2, 0f, 90f);
-            graphicsPath.AddLine(rect.Right - (float)(cornerRadius * 2), rect.Bottom, rect.X + (float)(cornerRadius * 2), rect.Bottom);
-            graphicsPath.AddArc(rect.X, rect.Bottom - (float)(cornerRadius * 2), cornerRadius * 2, cornerRadius * 2, 90f, 90f);
-            graphicsPath.AddLine(rect.X, rect.Bottom - (float)(cornerRadius * 2), rect.X, rect.Y + (float)(cornerRadius * 2));
-            graphicsPath.CloseFigure();
-            return graphicsPath;
+            var path = new SKPath();
+            float x = rect.Left;
+            float y = rect.Top;
+            float width = rect.Width;
+            float height = rect.Height;
+            float diameter = cornerRadius;
+            float radius = cornerRadius / 2f;
+
+            // Top-left arc
+            path.AddArc(new SKRect(x, y, x + diameter, y + diameter), 180, 90);
+
+            // Top line
+            path.LineTo(x + width - radius, y);
+
+            // Top-right arc
+            path.AddArc(new SKRect(x + width - diameter, y, x + width, y + diameter), 270, 90);
+
+            // Right line
+            path.LineTo(x + width, y + height - radius);
+
+            // Bottom-right arc
+            path.AddArc(new SKRect(x + width - diameter, y + height - diameter, x + width, y + height), 0, 90);
+
+            // Bottom line
+            path.LineTo(x + radius, y + height);
+
+            // Bottom-left arc
+            path.AddArc(new SKRect(x, y + height - diameter, x + diameter, y + height), 90, 90);
+
+            // Left line
+            path.LineTo(x, y + radius);
+            path.Close();
+            return path;
+        }
+
+        private SKBitmap ResizeBitmap(SKBitmap source, int width, int height)
+        {
+            var resizedBitmap = new SKBitmap(width, height);
+            using var canvas = new SKCanvas(resizedBitmap);
+            canvas.Clear(SKColors.Transparent);
+
+            float scaleX = (float)width / source.Width;
+            float scaleY = (float)height / source.Height;
+            canvas.Scale(scaleX, scaleY);
+            canvas.DrawBitmap(source, 0, 0);
+
+            return resizedBitmap;
+        }
+
+        public void Dispose()
+        {
+            base.QrCodeData?.Dispose();
         }
     }
 }

@@ -11,22 +11,53 @@ using backend;
 namespace backend.Migrations
 {
     [DbContext(typeof(MemoDbContext))]
-    [Migration("20250501063646_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250502193520_AddEventModel")]
+    partial class AddEventModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            modelBuilder.Entity("backend.Models.GuestMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RelationToCouple")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid>("WeddingId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeddingId");
+
+                    b.ToTable("GuestMessages");
+                });
 
             modelBuilder.Entity("backend.Models.Media", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
+
+                    b.Property<bool>("IsCoverImage")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -103,7 +134,19 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("CoupleName")
+                    b.Property<string>("BrideName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("BrideVows")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("GroomName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("GroomVows")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -127,6 +170,17 @@ namespace backend.Migrations
                     b.HasIndex("PlannerId");
 
                     b.ToTable("Weddings");
+                });
+
+            modelBuilder.Entity("backend.Models.GuestMessage", b =>
+                {
+                    b.HasOne("backend.Models.WeddingStory", "Wedding")
+                        .WithMany("GuestMessages")
+                        .HasForeignKey("WeddingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Wedding");
                 });
 
             modelBuilder.Entity("backend.Models.Media", b =>
@@ -166,6 +220,8 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Models.WeddingStory", b =>
                 {
                     b.Navigation("Gallery");
+
+                    b.Navigation("GuestMessages");
 
                     b.Navigation("QRCode")
                         .IsRequired();
